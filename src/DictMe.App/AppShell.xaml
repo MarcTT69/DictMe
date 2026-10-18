@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Shell xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+       xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+       xmlns:views="clr-namespace:DictMe.App.Views"
+       x:Class="DictMe.App.AppShell"
+       Shell.FlyoutBehavior="Disabled">
+
+    <TabBar>
+        <ShellContent Title="Dicter" Route="dictate" ContentTemplate="{DataTemplate views:MainPage}" />
+        <ShellContent Title="Historique" Route="history" ContentTemplate="{DataTemplate views:HistoryPage}" />
+        <ShellContent Title="Réglages" Route="settings" ContentTemplate="{DataTemplate views:SettingsPage}" />
+    </TabBar>
+
+</Shell>

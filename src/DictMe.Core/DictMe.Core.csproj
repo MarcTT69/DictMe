@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>DictMe.Core</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Bibliothèque managée uniquement : les binaires natifs (Whisper.net.Runtime) sont ajoutés par l'application. -->
+    <PackageReference Include="Whisper.net" Version="1.9.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="DictMe.Core.Tests" />
+  </ItemGroup>
+
+</Project>

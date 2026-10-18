@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:DictMe.App.ViewModels"
+             x:Class="DictMe.App.Views.HistoryPage"
+             x:DataType="vm:HistoryViewModel"
+             Title="Historique">
+
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Text="Tout effacer" Command="{Binding ClearAllCommand}" />
+    </ContentPage.ToolbarItems>
+
+    <Grid RowDefinitions="Auto,*" Padding="16,8" RowSpacing="8">
+        <Label Text="Touchez une dictée pour la copier, glissez vers la gauche pour la supprimer."
+               Style="{StaticResource Caption}" />
+
+        <CollectionView Grid.Row="1" ItemsSource="{Binding Items}">
+            <CollectionView.EmptyView>
+                <Label Text="Aucune dictée pour l'instant." HorizontalOptions="Center" VerticalOptions="Center"
+                       Style="{StaticResource Caption}" />
+            </CollectionView.EmptyView>
+            <CollectionView.ItemsLayout>
+                <LinearItemsLayout Orientation="Vertical" ItemSpacing="8" />
+            </CollectionView.ItemsLayout>
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="vm:HistoryItemViewModel">
+                    <SwipeView>
+                        <SwipeView.RightItems>
+                            <SwipeItems>
+                                <SwipeItem Text="Partager" BackgroundColor="{StaticResource Primary}" Command="{Binding ShareCommand}" />
+                                <SwipeItem Text="Supprimer" BackgroundColor="{StaticResource Recording}" Command="{Binding DeleteCommand}" />
+                            </SwipeItems>
+                        </SwipeView.RightItems>
+                        <Border Style="{StaticResource Card}">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding CopyCommand}" />
+                            </Border.GestureRecognizers>
+                            <VerticalStackLayout Spacing="6">
+                                <Label Text="{Binding Preview}" FontSize="16" />
+                                <Label Text="{Binding Details}" Style="{StaticResource Caption}" />
+                            </VerticalStackLayout>
+                        </Border>
+                    </SwipeView>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+    </Grid>
+</ContentPage>

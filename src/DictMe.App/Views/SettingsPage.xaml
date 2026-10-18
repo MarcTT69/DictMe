@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:DictMe.App.ViewModels"
+             x:Class="DictMe.App.Views.SettingsPage"
+             x:DataType="vm:SettingsViewModel"
+             Title="Réglages">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="16">
+
+            <Label Text="Modèle de transcription" Style="{StaticResource SectionTitle}" />
+            <Label Text="Whisper fonctionne directement sur le téléphone : gratuit, sans compte, et votre voix ne quitte jamais l'appareil. Plus le modèle est gros, plus il est précis, mais plus il est lent."
+                   Style="{StaticResource Caption}" />
+
+            <VerticalStackLayout Spacing="10" BindableLayout.ItemsSource="{Binding Models}">
+                <BindableLayout.ItemTemplate>
+                    <DataTemplate x:DataType="vm:ModelItemViewModel">
+                        <Border Style="{StaticResource Card}">
+                            <VerticalStackLayout Spacing="8">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <Label Text="{Binding Title}" FontAttributes="Bold" VerticalOptions="Center" />
+                                    <Label Grid.Column="1" Text="✓ Utilisé" TextColor="{StaticResource Primary}"
+                                           FontAttributes="Bold" IsVisible="{Binding IsSelected}" />
+                                </Grid>
+                                <Label Text="{Binding Description}" Style="{StaticResource Caption}" />
+
+                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10" IsVisible="{Binding IsDownloading}">
+                                    <ProgressBar Progress="{Binding Progress}" ProgressColor="{StaticResource Primary}" VerticalOptions="Center" />
+                                    <Label Grid.Column="1" Text="{Binding ProgressText}" Style="{StaticResource Caption}" />
+                                </Grid>
+                                <Label Text="{Binding ErrorText}" TextColor="{StaticResource Recording}" FontSize="13">
+                                    <Label.Triggers>
+                                        <DataTrigger TargetType="Label" Binding="{Binding ErrorText}" Value="">
+                                            <Setter Property="IsVisible" Value="False" />
+                                        </DataTrigger>
+                                    </Label.Triggers>
+                                </Label>
+
+                                <HorizontalStackLayout Spacing="10">
+                                    <Button Text="Télécharger" Command="{Binding DownloadCommand}" IsVisible="{Binding CanDownload}" />
+                                    <Button Text="Annuler" Command="{Binding CancelDownloadCommand}" IsVisible="{Binding IsDownloading}"
+                                            Style="{StaticResource SecondaryButton}" />
+                                    <Button Text="Utiliser" Command="{Binding SelectCommand}" IsVisible="{Binding CanSelect}" />
+                                    <Button Text="Supprimer" Command="{Binding DeleteCommand}" IsVisible="{Binding IsDownloaded}"
+                                            Style="{StaticResource SecondaryButton}" />
+                                </HorizontalStackLayout>
+                            </VerticalStackLayout>
+                        </Border>
+                    </DataTemplate>
+                </BindableLayout.ItemTemplate>
+            </VerticalStackLayout>
+
+            <Label Text="Langue" Style="{StaticResource SectionTitle}" />
+            <Border Style="{StaticResource Card}" Padding="12,4">
+                <Picker Title="Langue de dictée" ItemsSource="{Binding Languages}" SelectedItem="{Binding SelectedLanguage}" />
+            </Border>
+
+            <Label Text="Options" Style="{StaticResource SectionTitle}" />
+            <Border Style="{StaticResource Card}">
+                <VerticalStackLayout Spacing="12">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <VerticalStackLayout>
+                            <Label Text="Copier automatiquement" />
+                            <Label Text="Le texte est prêt à coller dans n'importe quelle application." Style="{StaticResource Caption}" />
+                        </VerticalStackLayout>
+                        <Switch Grid.Column="1" IsToggled="{Binding AutoCopy}" OnColor="{StaticResource Primary}" />
+                    </Grid>
+                    <Grid ColumnDefinitions="*,Auto">
+                        <VerticalStackLayout>
+                            <Label Text="Commandes vocales" />
+                            <Label Text="« à la ligne », « nouveau paragraphe », « virgule », « point d'interrogation », « point d'exclamation », « point-virgule », « points de suspension », « point final »."
+                                   Style="{StaticResource Caption}" />
+                        </VerticalStackLayout>
+                        <Switch Grid.Column="1" IsToggled="{Binding VoiceCommands}" OnColor="{StaticResource Primary}" />
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
+
+            <Label Text="Vocabulaire personnalisé" Style="{StaticResource SectionTitle}" />
+            <Border Style="{StaticResource Card}" Padding="8">
+                <Editor Text="{Binding CustomVocabulary}" AutoSize="TextChanges" MinimumHeightRequest="80"
+                        Placeholder="Noms propres, marques, jargon… séparés par des virgules (ex. : Marc, DictMe, Kubernetes)" />
+            </Border>
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

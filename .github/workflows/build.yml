@@ -1,0 +1,81 @@
+name: Build
+
+on:
+  push:
+    branches: ["**"]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - name: Tests unitaires
+        run: dotnet test tests/DictMe.Core.Tests/DictMe.Core.Tests.csproj -c Release
+
+  android:
+    needs: tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - uses: actions/setup-java@v4
+        with:
+          distribution: microsoft
+          java-version: "17"
+
+      - name: Workload MAUI Android
+        run: dotnet workload install maui-android
+
+      - name: Dépendances Android SDK
+        run: >
+          dotnet build src/DictMe.App/DictMe.App.csproj -f net10.0-android
+          -t:InstallAndroidDependencies
+          -p:AndroidSdkDirectory="$ANDROID_HOME"
+          -p:AcceptAndroidSDKLicenses=true
+
+      # Signature optionnelle avec votre propre clé (secrets du dépôt), pour pouvoir mettre à jour l'app
+      # sans la désinstaller. Sans ces secrets, l'APK est signé avec une clé de debug.
+      - name: Clé de signature
+        id: keystore
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+        run: |
+          if [ -n "$ANDROID_KEYSTORE_BASE64" ]; then
+            echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/dictme.keystore"
+            echo "args=-p:AndroidKeyStore=true -p:AndroidSigningKeyStore=$RUNNER_TEMP/dictme.keystore -p:AndroidSigningKeyAlias=$ANDROID_KEY_ALIAS -p:AndroidSigningKeyPass=env:ANDROID_KEYSTORE_PASSWORD -p:AndroidSigningStorePass=env:ANDROID_KEYSTORE_PASSWORD" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build APK
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+        run: >
+          dotnet publish src/DictMe.App/DictMe.App.csproj -f net10.0-android -c Release -o out
+          -p:AndroidSdkDirectory="$ANDROID_HOME"
+          ${{ steps.keystore.outputs.args }}
+
+      - name: Renommer l'APK
+        run: cp out/*-Signed.apk DictMe.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: DictMe-android
+          path: DictMe.apk
+
+      - name: Publier la release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: DictMe.apk

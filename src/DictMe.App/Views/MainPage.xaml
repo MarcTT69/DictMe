@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:DictMe.App.ViewModels"
+             x:Class="DictMe.App.Views.MainPage"
+             x:DataType="vm:MainViewModel"
+             Title="Dicter"
+             Shell.NavBarIsVisible="False">
+
+    <Grid RowDefinitions="Auto,Auto,*,Auto,Auto" Padding="20,24,20,16" RowSpacing="16">
+
+        <VerticalStackLayout Spacing="2">
+            <Label Text="DictMe" Style="{StaticResource Headline}" />
+            <Label Text="Dictée vocale gratuite, 100 % sur votre téléphone" Style="{StaticResource Caption}" />
+        </VerticalStackLayout>
+
+        <Border Grid.Row="1" Style="{StaticResource Card}" IsVisible="{Binding ModelMissing}">
+            <VerticalStackLayout Spacing="10">
+                <Label Text="Première utilisation" FontAttributes="Bold" />
+                <Label Text="{Binding ModelMissingText}" />
+                <Button Text="Télécharger le modèle" Command="{Binding OpenSettingsCommand}" />
+            </VerticalStackLayout>
+        </Border>
+
+        <Border Grid.Row="2" Style="{StaticResource Card}" Padding="8">
+            <Grid>
+                <Editor Text="{Binding TranscriptText}"
+                        Placeholder="Votre texte apparaîtra ici. Vous pouvez le corriger avant de le copier."
+                        FontSize="18" />
+                <VerticalStackLayout IsVisible="{Binding IsTranscribing}" VerticalOptions="Center" Spacing="12">
+                    <ActivityIndicator IsRunning="{Binding IsTranscribing}" Color="{StaticResource Primary}" />
+                    <Label Text="Transcription…" HorizontalOptions="Center" Style="{StaticResource Caption}" />
+                </VerticalStackLayout>
+            </Grid>
+        </Border>
+
+        <Grid Grid.Row="3" ColumnDefinitions="*,*,*" ColumnSpacing="10">
+            <Button Text="Copier" Command="{Binding CopyCommand}" Style="{StaticResource SecondaryButton}" />
+            <Button Grid.Column="1" Text="Partager" Command="{Binding ShareCommand}" Style="{StaticResource SecondaryButton}" />
+            <Button Grid.Column="2" Text="Effacer" Command="{Binding ClearCommand}" Style="{StaticResource SecondaryButton}" />
+        </Grid>
+
+        <VerticalStackLayout Grid.Row="4" Spacing="8" HorizontalOptions="Center">
+            <Button Text="{Binding RecordButtonText}"
+                    Command="{Binding ToggleRecordingCommand}"
+                    Style="{StaticResource RecordButton}"
+                    SemanticProperties.Description="Démarrer ou arrêter la dictée">
+                <Button.Triggers>
+                    <DataTrigger TargetType="Button" Binding="{Binding IsRecording}" Value="True">
+                        <Setter Property="BackgroundColor" Value="{StaticResource Recording}" />
+                    </DataTrigger>
+                </Button.Triggers>
+            </Button>
+            <Label Text="{Binding ElapsedText}" HorizontalOptions="Center" FontSize="20" FontAttributes="Bold" />
+            <Label Text="{Binding StatusText}" HorizontalOptions="Center" HorizontalTextAlignment="Center" Style="{StaticResource Caption}" />
+        </VerticalStackLayout>
+
+    </Grid>
+</ContentPage>
