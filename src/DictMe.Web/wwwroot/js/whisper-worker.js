@@ -1,11 +1,36 @@
 // Exécute Whisper dans le navigateur (transformers.js + ONNX Runtime WebAssembly), hors du fil principal
 // pour que l'interface reste fluide. Les modèles sont mis en cache par le navigateur après le premier
 // téléchargement : la transcription fonctionne ensuite hors ligne.
-import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@4.2.0';
+// Version 3.x : ses modèles Whisper quantifiés se chargent correctement dans Safari, contrairement aux
+// versions récentes d'ONNX Runtime (erreur « TransposeDQWeightsForMatMulNBits Missing required scale »).
+import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1';
 
 env.allowLocalModels = false;
 
 let loaded = { model: null, pipe: null };
+
+function progressReporter(id) {
+    // Avancement global calculé sur l'ensemble des fichiers du modèle (encodeur, décodeur, tokenizer...).
+    const files = {};
+    return info => {
+        if (info.status !== 'progress' || !info.total)
+            return;
+        files[info.file] = { loaded: info.loaded, total: info.total };
+        const all = Object.values(files);
+        const total = all.reduce((sum, f) => sum + f.total, 0);
+        const done = all.reduce((sum, f) => sum + f.loaded, 0);
+        postMessage({ type: 'progress', id, progress: total > 0 ? done / total * 100 : 0 });
+    };
+}
+
+function createPipeline(model, id, sessionOptions) {
+    return pipeline('automatic-speech-recognition', model, {
+        device: 'wasm',
+        dtype: 'q8',
+        progress_callback: progressReporter(id),
+        ...(sessionOptions ? { session_options: sessionOptions } : {}),
+    });
+}
 
 async function getPipeline(model, id) {
     if (loaded.model === model)
@@ -15,14 +40,15 @@ async function getPipeline(model, id) {
         await loaded.pipe.dispose?.();
     loaded = { model: null, pipe: null };
 
-    const pipe = await pipeline('automatic-speech-recognition', model, {
-        device: 'wasm',
-        dtype: 'q8',
-        progress_callback: info => {
-            if (info.status === 'progress_total')
-                postMessage({ type: 'progress', id, progress: info.progress });
-        },
-    });
+    let pipe;
+    try {
+        pipe = await createPipeline(model, id);
+    } catch (error) {
+        // Certaines optimisations du graphe ONNX échouent sur les modèles quantifiés : on réessaie sans.
+        // Les fichiers sont déjà en cache, il n'y a rien à retélécharger.
+        console.warn('DictMe : nouvel essai sans optimisation du graphe', error);
+        pipe = await createPipeline(model, id, { graphOptimizationLevel: 'disabled' });
+    }
     loaded = { model, pipe };
     return pipe;
 }
