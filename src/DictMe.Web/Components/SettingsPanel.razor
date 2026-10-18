@@ -1,0 +1,106 @@
+@inherits StateComponent
+
+<header>
+    <h1>Réglages</h1>
+</header>
+
+<h2>Modèle de transcription</h2>
+<p class="muted">
+    Whisper tourne directement dans le téléphone : gratuit, sans compte, et votre voix n'est envoyée nulle part.
+    Plus le modèle est gros, plus il est précis, mais plus il est lent.
+</p>
+
+@foreach (var model in WebModelCatalog.All)
+{
+    var cached = State.IsModelCached(model);
+    var selected = State.SelectedModel == model;
+    var downloading = State.DownloadingModelId == model.RepositoryId;
+
+    <section class="card model @(selected ? "selected" : "")" @key="model.Id">
+        <div class="row">
+            <strong>@model.DisplayName · @model.SizeLabel</strong>
+            @if (selected)
+            {
+                <span class="badge">✓ Utilisé</span>
+            }
+        </div>
+        <p class="muted">@model.Description</p>
+        @if (downloading)
+        {
+            <progress max="1" value="@State.DownloadProgress"></progress>
+        }
+        <div class="item-actions">
+            @if (!cached && !downloading)
+            {
+                <button class="small" disabled="@(State.DownloadingModelId is not null || State.IsTranscribing)"
+                        @onclick="() => State.DownloadModelAsync(model)">Télécharger</button>
+            }
+            @if (!selected)
+            {
+                <button class="secondary small" @onclick="() => State.SelectModel(model)">Utiliser</button>
+            }
+            @if (cached)
+            {
+                <button class="secondary small" disabled="@State.IsTranscribing" @onclick="() => State.DeleteModelAsync(model)">Supprimer</button>
+            }
+        </div>
+    </section>
+}
+@if (State.ModelError is not null)
+{
+    <p class="error">@State.ModelError</p>
+}
+
+<h2>Langue</h2>
+<section class="card">
+    <select value="@State.Settings.Language" @onchange="SetLanguage">
+        @foreach (var (languageCode, name) in Languages)
+        {
+            <option value="@languageCode">@name</option>
+        }
+    </select>
+</section>
+
+<h2>Options</h2>
+<section class="card">
+    <label class="toggle">
+        <span>
+            Copier automatiquement
+            <small class="muted">Le texte est prêt à coller dans n'importe quelle app.</small>
+        </span>
+        <input type="checkbox" checked="@State.Settings.AutoCopy"
+               @onchange="SetAutoCopy" />
+    </label>
+    <label class="toggle">
+        <span>
+            Commandes vocales
+            <small class="muted">« à la ligne », « nouveau paragraphe », « virgule », « point d'interrogation », « point d'exclamation », « point-virgule », « points de suspension », « point final ».</small>
+        </span>
+        <input type="checkbox" checked="@State.Settings.VoiceCommands"
+               @onchange="SetVoiceCommands" />
+    </label>
+</section>
+
+<p class="muted center small-text">DictMe · 100 % gratuit et privé · Whisper (OpenAI) via transformers.js</p>
+
+@code {
+    private static readonly (string Code, string Name)[] Languages =
+    [
+        ("fr", "Français"),
+        ("en", "Anglais"),
+        ("es", "Espagnol"),
+        ("de", "Allemand"),
+        ("it", "Italien"),
+        ("pt", "Portugais"),
+        ("auto", "Détection automatique"),
+    ];
+
+    private void SetLanguage(ChangeEventArgs e) =>
+        State.UpdateSettings(State.Settings with { Language = e.Value?.ToString() ?? "fr" });
+
+    private void SetAutoCopy(ChangeEventArgs e) =>
+        State.UpdateSettings(State.Settings with { AutoCopy = e.Value is true });
+
+    private void SetVoiceCommands(ChangeEventArgs e) =>
+        State.UpdateSettings(State.Settings with { VoiceCommands = e.Value is true });
+}

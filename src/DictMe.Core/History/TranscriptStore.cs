@@ -105,6 +105,28 @@ public sealed class TranscriptStore
     }
 }
 
+/// <summary>Format JSON de l'historique, partagé par l'app mobile (fichier) et la web app (stockage du navigateur).</summary>
+public static class TranscriptSerializer
+{
+    public static string Serialize(List<Transcript> transcripts) =>
+        JsonSerializer.Serialize(transcripts, HistoryJsonContext.Default.ListTranscript);
+
+    /// <summary>Renvoie une liste vide si le JSON est absent ou illisible.</summary>
+    public static List<Transcript> Deserialize(string? json)
+    {
+        if (string.IsNullOrWhiteSpace(json))
+            return [];
+        try
+        {
+            return JsonSerializer.Deserialize(json, HistoryJsonContext.Default.ListTranscript) ?? [];
+        }
+        catch (JsonException)
+        {
+            return [];
+        }
+    }
+}
+
 // Sérialisation générée à la compilation : compatible avec le « trimming » des builds Release mobiles.
 [JsonSourceGenerationOptions(WriteIndented = true)]
 [JsonSerializable(typeof(List<Transcript>))]

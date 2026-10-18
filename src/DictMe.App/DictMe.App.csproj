@@ -41,7 +41,8 @@
     <PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
     <PackageReference Include="Plugin.Maui.Audio" Version="4.0.0" />
-    <!-- Binaires natifs de whisper.cpp pour Android et iOS. -->
+    <!-- whisper.cpp et ses binaires natifs pour Android et iOS. -->
+    <PackageReference Include="Whisper.net" Version="1.9.1" />
     <PackageReference Include="Whisper.net.Runtime" Version="1.9.1" />
     <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.0" />
   </ItemGroup>

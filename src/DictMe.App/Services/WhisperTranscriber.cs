@@ -1,6 +1,7 @@
+using DictMe.Core.Transcription;
 using Whisper.net;
 
-namespace DictMe.Core.Transcription;
+namespace DictMe.App.Services;
 
 /// <summary>
 /// Transcription locale avec whisper.cpp (via Whisper.net) : gratuit, hors ligne, aucune donnée envoyée.

@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using DictMe.App.Services;
 using DictMe.Core.Models;
 using DictMe.Core.Transcription;
 

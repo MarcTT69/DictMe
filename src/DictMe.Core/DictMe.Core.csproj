@@ -8,11 +8,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- Bibliothèque managée uniquement : les binaires natifs (Whisper.net.Runtime) sont ajoutés par l'application. -->
-    <PackageReference Include="Whisper.net" Version="1.9.1" />
-  </ItemGroup>
-
-  <ItemGroup>
     <InternalsVisibleTo Include="DictMe.Core.Tests" />
   </ItemGroup>
 

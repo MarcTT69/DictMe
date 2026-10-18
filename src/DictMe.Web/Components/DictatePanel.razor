@@ -1,0 +1,105 @@
+@inherits StateComponent
+
+<header>
+    <h1>DictMe</h1>
+    <p class="muted">Dictée vocale gratuite, directement sur votre téléphone</p>
+</header>
+
+@if (State.IsIos && !State.IsStandalone)
+{
+    <section class="card hint">
+        <strong>Installer sur l'iPhone</strong>
+        <p>Dans Safari, touchez <b>Partager</b> <span aria-hidden="true">⬆️</span> puis <b>Sur l'écran d'accueil</b>. DictMe s'ouvrira comme une vraie app.</p>
+    </section>
+}
+
+@if (!State.IsModelCached(State.SelectedModel) && !State.IsTranscribing)
+{
+    <section class="card hint">
+        <strong>Première utilisation</strong>
+        <p>Le modèle <b>@State.SelectedModel.DisplayName</b> (@State.SelectedModel.SizeLabel) sera téléchargé une seule fois, puis tout fonctionne hors ligne.</p>
+        <button class="secondary" @onclick="OnOpenSettings">Choisir le modèle</button>
+    </section>
+}
+
+<section class="card editor">
+    <textarea placeholder="Votre texte apparaîtra ici. Vous pouvez le corriger avant de le copier."
+              value="@State.TranscriptText"
+              @onchange="e => State.EditTranscript(e.Value?.ToString() ?? string.Empty)"
+              @oninput="e => _draft = e.Value?.ToString()"
+              disabled="@State.IsTranscribing"></textarea>
+    @if (State.IsTranscribing)
+    {
+        <div class="overlay">
+            <div class="spinner"></div>
+            @if (State.DownloadingModelId is not null)
+            {
+                <progress max="1" value="@State.DownloadProgress"></progress>
+            }
+        </div>
+    }
+</section>
+
+<div class="actions">
+    <button class="secondary" disabled="@(!HasText)" @onclick="() => State.Copy(CurrentText)">Copier</button>
+    <button class="secondary" disabled="@(!HasText)" @onclick="() => State.Share(CurrentText)">Partager</button>
+    <button class="secondary" disabled="@(!HasText)" @onclick="Clear">Effacer</button>
+</div>
+
+<div class="recorder">
+    <button class="record @(State.IsRecording ? "recording" : "")" data-record-button
+            disabled="@State.IsTranscribing" aria-label="Démarrer ou arrêter la dictée">
+        @(State.IsRecording ? "■" : "🎙")
+    </button>
+    <div class="elapsed">@(State.IsRecording ? Elapsed : "")</div>
+    <p class="muted center">@State.Status</p>
+</div>
+
+@code {
+    [Parameter] public EventCallback OnOpenSettings { get; set; }
+
+    private string? _draft;
+    private CancellationTokenSource? _ticker;
+
+    // Le texte en cours de frappe n'est validé qu'à la sortie du champ : on l'utilise quand même pour Copier.
+    private string CurrentText => _draft ?? State.TranscriptText;
+    private bool HasText => !string.IsNullOrWhiteSpace(CurrentText);
+    private string Elapsed => (DateTime.UtcNow - State.RecordingStartedAt).ToString(@"mm\:ss");
+
+    protected override void OnStateChanged()
+    {
+        _draft = null;
+        if (State.IsRecording && _ticker is null)
+            _ = TickAsync(_ticker = new CancellationTokenSource());
+        else if (!State.IsRecording && _ticker is not null)
+        {
+            _ticker.Cancel();
+            _ticker = null;
+        }
+    }
+
+    private async Task TickAsync(CancellationTokenSource cts)
+    {
+        using var timer = new PeriodicTimer(TimeSpan.FromMilliseconds(500));
+        try
+        {
+            while (await timer.WaitForNextTickAsync(cts.Token))
+                await InvokeAsync(StateHasChanged);
+        }
+        catch (OperationCanceledException)
+        {
+        }
+    }
+
+    private void Clear()
+    {
+        _draft = null;
+        State.ClearTranscript();
+    }
+
+    public override void Dispose()
+    {
+        base.Dispose();
+        _ticker?.Cancel();
+    }
+}

@@ -1,0 +1,53 @@
+@page "/"
+@implements IDisposable
+@inject DictationState State
+
+<PageTitle>DictMe</PageTitle>
+
+<div class="app">
+    <main class="content">
+        @if (!State.IsReady)
+        {
+            <p class="muted center">Chargement…</p>
+        }
+        else
+        {
+            @switch (_tab)
+            {
+                case Tab.Dictate:
+                    <DictatePanel OnOpenSettings="() => _tab = Tab.Settings" />
+                    break;
+                case Tab.History:
+                    <HistoryPanel />
+                    break;
+                case Tab.Settings:
+                    <SettingsPanel />
+                    break;
+            }
+        }
+    </main>
+
+    <nav class="tabs">
+        <button class="@TabClass(Tab.Dictate)" @onclick="() => _tab = Tab.Dictate"><span>🎙</span>Dicter</button>
+        <button class="@TabClass(Tab.History)" @onclick="() => _tab = Tab.History"><span>🕘</span>Historique</button>
+        <button class="@TabClass(Tab.Settings)" @onclick="() => _tab = Tab.Settings"><span>⚙️</span>Réglages</button>
+    </nav>
+</div>
+
+@code {
+    private enum Tab { Dictate, History, Settings }
+
+    private Tab _tab = Tab.Dictate;
+
+    private string TabClass(Tab tab) => tab == _tab ? "tab active" : "tab";
+
+    protected override async Task OnInitializedAsync()
+    {
+        State.Changed += OnStateChanged;
+        await State.InitializeAsync();
+    }
+
+    private void OnStateChanged() => InvokeAsync(StateHasChanged);
+
+    public void Dispose() => State.Changed -= OnStateChanged;
+}

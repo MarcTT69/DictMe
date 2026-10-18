@@ -1,0 +1,47 @@
+@inherits StateComponent
+
+<header class="row">
+    <h1>Historique</h1>
+    @if (State.History.Count > 0)
+    {
+        @if (_confirmClear)
+        {
+            <button class="danger small" @onclick="ClearAll">Confirmer</button>
+        }
+        else
+        {
+            <button class="secondary small" @onclick="() => _confirmClear = true">Tout effacer</button>
+        }
+    }
+</header>
+<p class="muted">Vos dictées restent sur cet appareil.</p>
+
+@if (State.History.Count == 0)
+{
+    <p class="muted center empty">Aucune dictée pour l'instant.</p>
+}
+
+@foreach (var item in State.History)
+{
+    <article class="card item" @key="item.Id">
+        <p class="text">@item.Text</p>
+        <div class="row">
+            <span class="muted small-text">@item.CreatedAt.LocalDateTime.ToString("dd/MM/yyyy HH:mm") · @item.AudioDuration.ToString(@"m\:ss")</span>
+            <div class="item-actions">
+                <button class="secondary small" @onclick="() => State.Copy(item.Text)">Copier</button>
+                <button class="secondary small" @onclick="() => State.Share(item.Text)">Partager</button>
+                <button class="secondary small" aria-label="Supprimer" @onclick="() => State.DeleteTranscript(item.Id)">🗑</button>
+            </div>
+        </div>
+    </article>
+}
+
+@code {
+    private bool _confirmClear;
+
+    private void ClearAll()
+    {
+        _confirmClear = false;
+        State.ClearHistory();
+    }
+}

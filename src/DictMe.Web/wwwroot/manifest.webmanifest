@@ -1,0 +1,17 @@
+{
+  "name": "DictMe",
+  "short_name": "DictMe",
+  "description": "Dictée vocale gratuite et privée : Whisper directement sur votre téléphone.",
+  "lang": "fr",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#5B3DF5",
+  "theme_color": "#5B3DF5",
+  "prefer_related_applications": false,
+  "icons": [
+    { "src": "icon-512.png", "type": "image/png", "sizes": "512x512", "purpose": "any maskable" },
+    { "src": "icon-192.png", "type": "image/png", "sizes": "192x192", "purpose": "any" }
+  ]
+}
